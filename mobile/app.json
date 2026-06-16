@@ -1,5 +1,6 @@
 {
   "expo": {
+    "owner": "agomesdesiqueira",
     "name": "mobile",
     "slug": "mobile",
     "version": "1.0.0",
@@ -12,6 +13,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "edu.ufl.clinicals",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -44,6 +46,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "API_BASE_URL": "https://clinicals-backend.onrender.com",
+      "router": {},
+      "eas": {
+        "projectId": "245a4a98-9645-43d9-9664-9d34c502e8eb"
+      }
     }
   }
 }
