@@ -271,12 +271,37 @@ export default function Level1Screen() {
   const voiceEnabledRef = useRef(true);
 
   const recordingRef = useRef<Audio.Recording | null>(null);
+  const webMediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const webAudioChunksRef = useRef<Blob[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [recordingBusy, setRecordingBusy] = useState(false);
 
   const startRecording = async () => {
     if (recordingBusy || transcribing || isRecording) return;
+      if (Platform.OS === "web") {
+    setRecordingBusy(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      webAudioChunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          webAudioChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.start();
+      webMediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch (err) {
+      console.warn("Failed to start web recording:", err);
+    } finally {
+      setRecordingBusy(false);
+    }
+    return;
+  }
 
     setRecordingBusy(true);
     try {
@@ -307,7 +332,99 @@ export default function Level1Screen() {
   };
 
   const stopRecordingAndTranscribe = async () => {
-    if (recordingBusy) return;
+    if (recordingBusy) return;  if (Platform.OS === "web") {
+    const recorder = webMediaRecorderRef.current;
+    if (!recorder) return;
+
+    setRecordingBusy(true);
+    setIsRecording(false);
+    setTranscribing(true);
+
+    try {
+      const audioBlob: Blob = await new Promise((resolve) => {
+        recorder.onstop = () => {
+          resolve(new Blob(webAudioChunksRef.current, { type: "audio/webm" }));
+        };
+        recorder.stop();
+      });
+
+      recorder.stream.getTracks().forEach((track) => track.stop());
+      webMediaRecorderRef.current = null;
+
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const audioBase64 = btoa(binary);
+
+      const data = await request("/voice/transcribe", {
+        method: "POST",
+        body: {
+          audio_base64: audioBase64,
+          mime_type: "audio/webm",
+        },
+      });
+
+      if (data?.text) setInput(data.text);
+    } catch (err) {
+      console.warn("Web transcription failed:", err);
+    } finally {
+      setTranscribing(false);
+      setRecordingBusy(false);
+    }
+
+    return;
+  }
+      if (Platform.OS === "web") {
+    const recorder = webMediaRecorderRef.current;
+    if (!recorder) return;
+
+    setRecordingBusy(true);
+    setIsRecording(false);
+    setTranscribing(true);
+
+    try {
+      const audioBlob: Blob = await new Promise((resolve) => {
+        recorder.onstop = () => {
+          resolve(new Blob(webAudioChunksRef.current, { type: "audio/webm" }));
+        };
+        recorder.stop();
+      });
+
+      recorder.stream.getTracks().forEach((track) => track.stop());
+      webMediaRecorderRef.current = null;
+
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const audioBase64 = btoa(binary);
+
+      const data = await request("/voice/transcribe", {
+        method: "POST",
+        body: {
+          audio_base64: audioBase64,
+          mime_type: "audio/webm",
+        },
+      });
+
+      if (data?.text) setInput(data.text);
+    } catch (err) {
+      console.warn("Web transcription failed:", err);
+    } finally {
+      setTranscribing(false);
+      setRecordingBusy(false);
+    }
+
+    return;
+  }
+
+
+
     const recording = recordingRef.current;
     if (!recording) return;
 
@@ -416,26 +533,46 @@ export default function Level1Screen() {
           body: { text: inputText },
         });
 
-        const audioBase64 = String(payload?.audio_base64 || "").trim();
-        if (!audioBase64) return;
+const audioBase64 = String(payload?.audio_base64 || "").trim();
+if (!audioBase64) return;
 
-        const mimeType = String(payload?.mime_type || "").toLowerCase();
-        const extension = mimeType.includes("wav") ? "wav" : "mp3";
-        const baseDir = FileSystem.cacheDirectory || FileSystem.documentDirectory;
-        if (!baseDir) {
-          throw new Error("No writable filesystem directory for audio playback.");
-        }
+const mimeType = String(payload?.mime_type || "audio/mpeg").toLowerCase();
 
-        const filePath = `${baseDir}tts-${Date.now()}.${extension}`;
-        await FileSystem.writeAsStringAsync(filePath, audioBase64, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
+if (Platform.OS === "web") {
+  const audioUri = `data:${mimeType};base64,${audioBase64}`;
+  const audio = new window.Audio(audioUri);
 
-        soundFilePathRef.current = filePath;
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: filePath },
-          { shouldPlay: true }
-        );
+  setIsSpeaking(true);
+
+  audio.onended = () => {
+    setIsSpeaking(false);
+  };
+
+  audio.onerror = () => {
+    setIsSpeaking(false);
+    console.warn("Failed to play web patient voice.");
+  };
+
+  await audio.play();
+  return;
+}
+
+const extension = mimeType.includes("wav") ? "wav" : "mp3";
+const baseDir = FileSystem.cacheDirectory || FileSystem.documentDirectory;
+if (!baseDir) {
+  throw new Error("No writable filesystem directory for audio playback.");
+}
+
+const filePath = `${baseDir}tts-${Date.now()}.${extension}`;
+await FileSystem.writeAsStringAsync(filePath, audioBase64, {
+  encoding: FileSystem.EncodingType.Base64,
+});
+
+soundFilePathRef.current = filePath;
+const { sound } = await Audio.Sound.createAsync(
+  { uri: filePath },
+  { shouldPlay: true }
+);
 
         soundRef.current = sound;
         setIsSpeaking(true);
