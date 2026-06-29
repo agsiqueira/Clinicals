@@ -255,6 +255,12 @@ export default function Level1Screen() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [pendingMessages, setPendingMessages] = useState<Msg[]>([]);
   const [creatingConversation, setCreatingConversation] = useState(false);
+  const [conversationCreateError, setConversationCreateError] = useState<string | null>(null);
+  const conversationIdRef = useRef<string | null>(null);
+  const conversationPromiseRef = useRef<Promise<string | null> | null>(null);
+  const activeCaseIdRef = useRef(caseId);
+  const pendingMessagesRef = useRef<Msg[]>([]);
+  const pendingPersistencePromiseRef = useRef<Promise<void> | null>(null);
   const [stage, setStage] = useState<"chat" | "hpi" | "results">("chat");
   const [hpiText, setHpiText] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -488,6 +494,18 @@ export default function Level1Screen() {
     return headers;
   }, [user]);
 
+  useEffect(() => {
+    activeCaseIdRef.current = caseId;
+  }, [caseId]);
+
+  useEffect(() => {
+    conversationIdRef.current = conversationId;
+  }, [conversationId]);
+
+  useEffect(() => {
+    pendingMessagesRef.current = pendingMessages;
+  }, [pendingMessages]);
+
   const stopSpeechPlayback = useCallback(async () => {
     const currentSound = soundRef.current;
     soundRef.current = null;
@@ -601,11 +619,10 @@ const { sound } = await Audio.Sound.createAsync(
     setPendingMessages((prev) => [...prev, msg]);
   }, []);
 
-  const persistMessage = useCallback(
-    async (msg: Msg) => {
-      if (!conversationId) return;
+  const persistMessageToConversation = useCallback(
+    async (targetConversationId: string, msg: Msg) => {
       try {
-        await request(`/conversations/${conversationId}/messages`, {
+        await request(`/conversations/${targetConversationId}/messages`, {
           method: "POST",
           headers: userHeaders,
           body: {
@@ -617,36 +634,105 @@ const { sound } = await Audio.Sound.createAsync(
         console.warn("Failed to persist message:", err);
       }
     },
-    [conversationId, userHeaders]
+    [userHeaders]
+  );
+
+  const persistMessage = useCallback(
+    async (msg: Msg) => {
+      const targetConversationId = conversationIdRef.current;
+      if (!targetConversationId) return;
+      await persistMessageToConversation(targetConversationId, msg);
+    },
+    [persistMessageToConversation]
+  );
+
+  const flushPendingMessages = useCallback(
+    async (targetConversationId: string) => {
+      if (pendingPersistencePromiseRef.current) {
+        await pendingPersistencePromiseRef.current;
+      }
+
+      const queuedMessages = pendingMessagesRef.current;
+      if (queuedMessages.length === 0) return;
+
+      pendingMessagesRef.current = [];
+      setPendingMessages((prev) =>
+        prev.filter((msg) => !queuedMessages.some((queued) => queued.id === msg.id))
+      );
+
+      const persistencePromise = Promise.all(
+        queuedMessages.map((msg) => persistMessageToConversation(targetConversationId, msg))
+      ).then(() => undefined);
+      pendingPersistencePromiseRef.current = persistencePromise;
+
+      try {
+        await persistencePromise;
+      } finally {
+        if (pendingPersistencePromiseRef.current === persistencePromise) {
+          pendingPersistencePromiseRef.current = null;
+        }
+      }
+    },
+    [persistMessageToConversation]
   );
 
   const ensureConversation = useCallback(async (): Promise<string | null> => {
-    if (!userHeaders["x-clerk-user-id"]) return null;
-    if (conversationId) return conversationId;
-    if (creatingConversation) return null;
-
-    setCreatingConversation(true);
-    try {
-      const data = await request("/conversations", {
-        method: "POST",
-        headers: userHeaders,
-        body: { caseId },
-      });
-      const id = String(data?.conversationId || "");
-      if (!id) return null;
-      setConversationId(id);
-      return id;
-    } catch (err) {
-      console.warn("Failed to create conversation:", err);
+    if (!userHeaders["x-clerk-user-id"]) {
+      setConversationCreateError("Sign in again to start this case.");
       return null;
-    } finally {
-      setCreatingConversation(false);
     }
-  }, [caseId, conversationId, creatingConversation, userHeaders]);
+
+    const existingId = conversationIdRef.current || conversationId;
+    if (existingId) return existingId;
+    if (conversationPromiseRef.current) return conversationPromiseRef.current;
+
+    const createCaseId = caseId;
+    const createPromise = (async () => {
+      setCreatingConversation(true);
+      setConversationCreateError(null);
+
+      try {
+        const data = await request("/conversations", {
+          method: "POST",
+          headers: userHeaders,
+          body: { caseId: createCaseId },
+        });
+        const id = String(data?.conversationId || "");
+        if (!id) {
+          throw new Error("The server did not return a conversation ID.");
+        }
+        if (activeCaseIdRef.current !== createCaseId) return null;
+        conversationIdRef.current = id;
+        setConversationId(id);
+        return id;
+      } catch (err: any) {
+        const detail = String(err?.message || "Unable to create the conversation.");
+        const message = `Could not prepare this case for submission. ${detail} Tap Retry Setup or try again in a moment.`;
+        setConversationCreateError(message);
+        console.warn("Failed to create conversation:", err);
+        return null;
+      } finally {
+        if (conversationPromiseRef.current === createPromise) {
+          conversationPromiseRef.current = null;
+          setCreatingConversation(false);
+        }
+      }
+    })();
+
+    conversationPromiseRef.current = createPromise;
+    return createPromise;
+  }, [caseId, conversationId, userHeaders]);
 
   useEffect(() => {
+    activeCaseIdRef.current = caseId;
+    conversationIdRef.current = null;
+    conversationPromiseRef.current = null;
+    pendingMessagesRef.current = [];
+    pendingPersistencePromiseRef.current = null;
     setConversationId(null);
+    setCreatingConversation(false);
     setPendingMessages([]);
+    setConversationCreateError(null);
     setStage("chat");
     setHpiText("");
     setSubmissionResult(null);
@@ -767,12 +853,8 @@ const { sound } = await Audio.Sound.createAsync(
 
   useEffect(() => {
     if (!conversationId || pendingMessages.length === 0) return;
-    const toPersist = pendingMessages;
-    setPendingMessages([]);
-    toPersist.forEach((msg) => {
-      persistMessage(msg);
-    });
-  }, [conversationId, pendingMessages, persistMessage]);
+    void flushPendingMessages(conversationId);
+  }, [conversationId, flushPendingMessages, pendingMessages]);
 
   useEffect(() => {
     let cancelled = false;
@@ -895,8 +977,10 @@ const { sound } = await Audio.Sound.createAsync(
         convoId = await ensureConversation();
       }
       if (!convoId) {
-        throw new Error("Conversation is still being created. Please try again.");
+        return;
       }
+
+      await flushPendingMessages(convoId);
 
       const data = await request(`/conversations/${convoId}/submit`, {
         method: "POST",
@@ -940,7 +1024,7 @@ const { sound } = await Audio.Sound.createAsync(
     } finally {
       setSubmitting(false);
     }
-  }, [caseId, conversationId, ensureConversation, hpiText, submitting, userHeaders]);
+  }, [caseId, conversationId, ensureConversation, flushPendingMessages, hpiText, submitting, userHeaders]);
 
   const resumeConversation = useCallback(async () => {
     if (!savedConversationId) return;
@@ -955,6 +1039,7 @@ const { sound } = await Audio.Sound.createAsync(
         content: m.content,
       }));
       setMessages(msgs);
+      setConversationCreateError(null);
       setConversationId(savedConversationId);
       setShowResumePrompt(false);
     } catch (e: any) {
@@ -971,6 +1056,7 @@ const { sound } = await Audio.Sound.createAsync(
     await deleteItemAsync(`conv_${caseId}`).catch(() => {});
     setSavedConversationId(null);
     setShowResumePrompt(false);
+    setConversationCreateError(null);
   }, [caseId]);
 
   const retryCase = useCallback(async () => {
@@ -979,6 +1065,11 @@ const { sound } = await Audio.Sound.createAsync(
 
     setSavedConversationId(null);
     setShowResumePrompt(false);
+    setConversationCreateError(null);
+    conversationIdRef.current = null;
+    conversationPromiseRef.current = null;
+    pendingMessagesRef.current = [];
+    pendingPersistencePromiseRef.current = null;
     setConversationId(null);
     setPendingMessages([]);
     setMessages([]);
@@ -1005,6 +1096,23 @@ const { sound } = await Audio.Sound.createAsync(
       </SafeAreaView>
     );
   }
+
+  const conversationInitializing = creatingConversation && !conversationId;
+  const canRetryConversationSetup = !conversationId && !!conversationCreateError && !conversationInitializing;
+  const submitDisabled = submitting || conversationInitializing || !hpiText.trim();
+  const submitButtonLabel = conversationInitializing
+    ? "Preparing Case..."
+    : submitting
+    ? conversationId
+      ? "Submitting..."
+      : "Preparing Case..."
+    : canRetryConversationSetup
+    ? "Retry Setup"
+    : "Submit Case";
+  const gradingTitle = conversationId ? "Grading your case..." : "Preparing your case...";
+  const gradingSubText = conversationId
+    ? "This may take up to a minute. Please wait."
+    : "Setting up the saved conversation before submission.";
 
   return (
     <SafeAreaView style={caseStyles.container}>
@@ -1037,10 +1145,8 @@ const { sound } = await Audio.Sound.createAsync(
         <View style={caseStyles.gradingOverlay}>
           <View style={caseStyles.gradingCard}>
             <ActivityIndicator size="large" />
-            <Text style={caseStyles.gradingTitle}>Grading your case...</Text>
-            <Text style={caseStyles.gradingSubText}>
-              This may take up to a minute. Please wait.
-            </Text>
+            <Text style={caseStyles.gradingTitle}>{gradingTitle}</Text>
+            <Text style={caseStyles.gradingSubText}>{gradingSubText}</Text>
           </View>
         </View>
       )}
@@ -1356,6 +1462,12 @@ const { sound } = await Audio.Sound.createAsync(
                 {submitError ? (
                   <Text style={caseStyles.errorText}>{submitError}</Text>
                 ) : null}
+                {conversationInitializing ? (
+                  <Text style={caseStyles.hpiSubText}>Preparing case submission...</Text>
+                ) : null}
+                {conversationCreateError && !conversationInitializing ? (
+                  <Text style={caseStyles.errorText}>{conversationCreateError}</Text>
+                ) : null}
 
                 <View style={caseStyles.hpiButtonRow}>
                   <Pressable
@@ -1370,14 +1482,14 @@ const { sound } = await Audio.Sound.createAsync(
                   </Pressable>
                   <Pressable
                     onPress={submitForFinalGrade}
-                    disabled={submitting || !hpiText.trim()}
+                    disabled={submitDisabled}
                     style={({ pressed }) => ({
                       ...caseStyles.outlineButton,
-                      opacity: submitting || !hpiText.trim() ? 0.5 : pressed ? 0.7 : 1,
+                      opacity: submitDisabled ? 0.5 : pressed ? 0.7 : 1,
                     })}
                   >
                     <Text style={caseStyles.outlineButtonText}>
-                      {submitting ? "Submitting..." : "Submit Case"}
+                      {submitButtonLabel}
                     </Text>
                   </Pressable>
                 </View>
