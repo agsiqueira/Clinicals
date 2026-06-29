@@ -4,6 +4,7 @@ export const casesStyles = StyleSheet.create({
   // Layout
   container: {
     flex: 1,
+    backgroundColor: "#ffffff",
   },
 
   // Header bar (name + sign out row)
@@ -12,6 +13,7 @@ export const casesStyles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderColor: "#e5e7eb",
+    backgroundColor: "#ffffff",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -23,6 +25,7 @@ export const casesStyles = StyleSheet.create({
   headerName: {
     fontSize: 16,
     fontWeight: "700",
+    color: "#111827",
   },
   headerEmail: {
     color: "#4b5563",
@@ -33,9 +36,11 @@ export const casesStyles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    backgroundColor: "#ffffff",
   },
   signOutButtonText: {
     fontWeight: "600",
+    color: "#111827",
   },
 
   // Points card
@@ -84,6 +89,7 @@ export const casesStyles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
     marginBottom: 4,
+    color: "#111827",
   },
   casesSubText: {
     color: "#6b7280",
@@ -101,9 +107,11 @@ export const casesStyles = StyleSheet.create({
     alignSelf: "flex-start",
     paddingHorizontal: 12,
     paddingVertical: 8,
+    backgroundColor: "#ffffff",
   },
   retryButtonText: {
     fontWeight: "600",
+    color: "#111827",
   },
 
   // Case card

@@ -54,13 +54,14 @@ export default function AttemptsScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#ffffff" }}>
       <View
         style={{
           paddingHorizontal: 16,
           paddingVertical: 12,
           borderBottomWidth: 1,
           borderColor: "#e5e7eb",
+          backgroundColor: "#ffffff",
           flexDirection: "row",
           alignItems: "center",
           gap: 12,
@@ -73,7 +74,7 @@ export default function AttemptsScreen() {
           <Text style={{ fontSize: 16, color: "#1d4ed8" }}>← Back</Text>
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 17, fontWeight: "700" }}>Previous Attempts</Text>
+          <Text style={{ fontSize: 17, fontWeight: "700", color: "#111827" }}>Previous Attempts</Text>
           <Text style={{ color: "#6b7280", fontSize: 13 }}>Case: {caseId}</Text>
         </View>
       </View>
@@ -96,7 +97,7 @@ export default function AttemptsScreen() {
               paddingVertical: 8,
             }}
           >
-            <Text style={{ fontWeight: "600" }}>Retry</Text>
+            <Text style={{ fontWeight: "600", color: "#111827" }}>Retry</Text>
           </Pressable>
         </View>
       ) : (
@@ -142,7 +143,7 @@ export default function AttemptsScreen() {
                   backgroundColor: pressed ? "#f9fafb" : "#ffffff",
                 })}
               >
-                <Text style={{ fontSize: 15, fontWeight: "700" }}>
+                <Text style={{ fontSize: 15, fontWeight: "700", color: "#111827" }}>
                   Attempt {item.attemptNumber}
                 </Text>
                 <Text style={{ color: "#6b7280", marginTop: 2 }}>{date}</Text>
@@ -154,7 +155,7 @@ export default function AttemptsScreen() {
                     marginTop: 6,
                   }}
                 >
-                  <Text style={{ fontWeight: "700", fontSize: 16 }}>{scoreLabel}</Text>
+                  <Text style={{ fontWeight: "700", fontSize: 16, color: "#111827" }}>{scoreLabel}</Text>
                   <Text style={{ fontWeight: "600", color: passedColor }}>
                     {passedLabel}
                   </Text>

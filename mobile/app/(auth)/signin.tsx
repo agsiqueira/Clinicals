@@ -104,6 +104,7 @@ export default function SigninScreen() {
                         value={identifier}
                         onChangeText={setIdentifier}
                         placeholder="Email or Username"
+                        placeholderTextColor="#ba8ce6"
                         autoCapitalize="none"
                         autoCorrect={false}
                         style={authStyles.textInput}
@@ -115,6 +116,7 @@ export default function SigninScreen() {
                         value={password}
                         onChangeText={setPassword}
                         placeholder="Password"
+                        placeholderTextColor="#ba8ce6"
                         secureTextEntry={!showPassword}
                         autoCapitalize="none"
                         autoCorrect={false}

@@ -1092,7 +1092,7 @@ const { sound } = await Audio.Sound.createAsync(
     return (
       <SafeAreaView style={caseStyles.container}>
         <Text style={caseStyles.loadErrorTitle}>Failed</Text>
-        <Text>{error}</Text>
+        <Text style={caseStyles.loadErrorText}>{error}</Text>
       </SafeAreaView>
     );
   }
@@ -1370,7 +1370,7 @@ const { sound } = await Audio.Sound.createAsync(
                     <Text style={caseStyles.messageSenderLabel}>
                       {isUser ? "You" : "Patient"}
                     </Text>
-                    <Text>{item.content}</Text>
+                    <Text style={caseStyles.messageText}>{item.content}</Text>
                   </View>
                 );
               }}
@@ -1394,6 +1394,7 @@ const { sound } = await Audio.Sound.createAsync(
                     value={input}
                     onChangeText={setInput}
                     placeholder="Ask the patient a question..."
+                    placeholderTextColor="#6b7280"
                     style={caseStyles.textInput}
                     editable={!sending}
                     returnKeyType="send"
@@ -1455,6 +1456,7 @@ const { sound } = await Audio.Sound.createAsync(
                     textAlignVertical="top"
                     editable={!submitting}
                     placeholder="Write your HPI summary here..."
+                    placeholderTextColor="#6b7280"
                     style={caseStyles.hpiInput}
                   />
                 </View>

@@ -4,6 +4,7 @@ import { COLORS } from "../../constants/colors";
 export const caseStyles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#ffffff",
   },
 
   header: {
@@ -48,11 +49,13 @@ export const caseStyles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700",
     textAlign: "center",
+    color: "#111827",
   },
 
   subText: {
     opacity: 0.7,
     textAlign: "center",
+    color: "#111827",
   },
 
   voiceControlsRow: {
@@ -93,38 +96,48 @@ export const caseStyles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 10,
     backgroundColor: "#fbfcfd",
+    borderColor: "#d1d5db",
   },
 
   inputContainer: {
     padding: 12,
     borderTopWidth: 1,
+    borderColor: "#e5e7eb",
     flexDirection: "row",
     gap: 10,
     alignItems: "center",
+    backgroundColor: "#ffffff",
   },
 
   textInput: {
     flex: 1,
     borderWidth: 1,
+    borderColor: "#d1d5db",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    backgroundColor: "#ffffff",
+    color: "#111827",
   },
 
   sendButton: {
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderWidth: 1,
+    borderColor: "#d1d5db",
     borderRadius: 10,
+    backgroundColor: "#ffffff",
   },
 
   // Results screen
   resultsCard: {
     borderWidth: 1,
+    borderColor: "#e5e7eb",
     borderRadius: 12,
     padding: 12,
     gap: 10,
     marginBottom: 12,
+    backgroundColor: "#ffffff",
   },
 
   resultsScoreRow: {
@@ -136,6 +149,7 @@ export const caseStyles = StyleSheet.create({
   resultsScoreText: {
     fontSize: 28,
     fontWeight: "800",
+    color: "#111827",
   },
 
   resultsPassText: {
@@ -219,9 +233,11 @@ export const caseStyles = StyleSheet.create({
   // Criterion card
   criterionCard: {
     borderWidth: 1,
+    borderColor: "#e5e7eb",
     borderRadius: 12,
     padding: 12,
     marginBottom: 10,
+    backgroundColor: "#ffffff",
   },
 
   criterionRow: {
@@ -233,6 +249,7 @@ export const caseStyles = StyleSheet.create({
   criterionLabel: {
     flex: 1,
     fontWeight: "700",
+    color: "#111827",
   },
 
   criterionMeta: {
@@ -258,14 +275,17 @@ export const caseStyles = StyleSheet.create({
   // HPI stage
   hpiCard: {
     borderWidth: 1,
+    borderColor: "#e5e7eb",
     borderRadius: 12,
     padding: 12,
+    backgroundColor: "#ffffff",
   },
 
   hpiTitle: {
     fontSize: 16,
     fontWeight: "700",
     marginBottom: 6,
+    color: "#111827",
   },
 
   hpiSubText: {
@@ -275,10 +295,13 @@ export const caseStyles = StyleSheet.create({
 
   hpiInput: {
     borderWidth: 1,
+    borderColor: "#d1d5db",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     minHeight: 120,
+    backgroundColor: "#ffffff",
+    color: "#111827",
   },
 
   hpiButtonRow: {
@@ -290,13 +313,16 @@ export const caseStyles = StyleSheet.create({
   outlineButton: {
     flex: 1,
     borderWidth: 1,
+    borderColor: "#d1d5db",
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: "center",
+    backgroundColor: "#ffffff",
   },
 
   outlineButtonText: {
     fontWeight: "700",
+    color: "#111827",
   },
 
   errorText: {
@@ -326,6 +352,7 @@ export const caseStyles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 17,
     marginBottom: 8,
+    color: "#111827",
   },
 
   resumeSubText: {
@@ -356,12 +383,17 @@ export const caseStyles = StyleSheet.create({
 
   resumeSecondaryButtonText: {
     fontWeight: "600",
+    color: "#111827",
   },
 
   // Error / loading states
   loadErrorTitle: {
     fontWeight: "700",
     marginBottom: 8,
+    color: "#111827",
+  },
+  loadErrorText: {
+    color: "#111827",
   },
 
   // Results flat list
@@ -395,6 +427,10 @@ export const caseStyles = StyleSheet.create({
   messageSenderLabel: {
     fontWeight: "700",
     marginBottom: 4,
+    color: "#111827",
+  },
+  messageText: {
+    color: "#111827",
   },
 
   // Empty chat hint
@@ -428,6 +464,7 @@ export const caseStyles = StyleSheet.create({
   // Generic button label
   buttonText: {
     fontWeight: "700",
+    color: "#111827",
   },
 
   gradingOverlay: {
@@ -452,6 +489,7 @@ export const caseStyles = StyleSheet.create({
   gradingTitle: {
     fontWeight: "700",
     fontSize: 17,
+    color: "#111827",
   },
 
   gradingSubText: {

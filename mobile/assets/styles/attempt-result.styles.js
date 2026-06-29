@@ -3,6 +3,7 @@ import { StyleSheet } from "react-native";
 export const attemptResultStyles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#ffffff",
   },
 
   // Header bar
@@ -11,6 +12,7 @@ export const attemptResultStyles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderColor: "#e5e7eb",
+    backgroundColor: "#ffffff",
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
@@ -26,6 +28,7 @@ export const attemptResultStyles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: "700",
+    color: "#111827",
   },
 
   // Loading state
@@ -33,6 +36,7 @@ export const attemptResultStyles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#ffffff",
   },
 
   // Error state
@@ -52,9 +56,11 @@ export const attemptResultStyles = StyleSheet.create({
     alignSelf: "flex-start",
     paddingHorizontal: 12,
     paddingVertical: 8,
+    backgroundColor: "#ffffff",
   },
   retryButtonText: {
     fontWeight: "600",
+    color: "#111827",
   },
 
   // Transcript footer
@@ -91,5 +97,9 @@ export const attemptResultStyles = StyleSheet.create({
   messageSender: {
     fontWeight: "700",
     marginBottom: 4,
+    color: "#111827",
+  },
+  messageText: {
+    color: "#111827",
   },
 });

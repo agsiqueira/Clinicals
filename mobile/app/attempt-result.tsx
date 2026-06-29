@@ -321,7 +321,7 @@ export default function AttemptResultScreen() {
                                 <Text style={attemptResultStyles.messageSender}>
                                     {isUser ? "You" : "Patient"}
                                 </Text>
-                                <Text>{msg.content}</Text>
+                                <Text style={attemptResultStyles.messageText}>{msg.content}</Text>
                             </View>
                             );
                         })
